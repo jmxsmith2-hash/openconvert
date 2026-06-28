@@ -151,13 +151,9 @@ function App() {
         <section className="mx-auto mt-20 max-w-3xl">
           <h2 className="font-display text-2xl font-semibold text-ink">Why it works this way</h2>
           <p className="mt-4 leading-relaxed text-ink-soft">
-            In 2025 the{' '}
+            In 2026 the{' '}
             <a className="text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink" href="https://www.fbi.gov/contact-us/field-offices/denver/news/fbi-denver-warns-of-online-file-converter-scam" target="_blank" rel="noreferrer">
               FBI
-            </a>{' '}
-            and{' '}
-            <a className="text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink" href="https://www.malwarebytes.com/blog/news/2025/03/warning-over-free-online-file-converters-that-actually-install-malware" target="_blank" rel="noreferrer">
-              Malwarebytes
             </a>{' '}
             warned that many &ldquo;free online file converter&rdquo; sites harvest the files you
             upload or push malware. OpenConvert removes the risk by removing the upload entirely.

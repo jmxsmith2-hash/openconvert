@@ -8,9 +8,8 @@ instead of trusting it.
 
 ## Why this exists
 
-The most popular "free online file converter" sites have a real problem: in 2025
+The most popular "free online file converter" sites have a real problem: in 2026
 the [FBI](https://www.fbi.gov/contact-us/field-offices/denver/news/fbi-denver-warns-of-online-file-converter-scam)
-and [Malwarebytes](https://www.malwarebytes.com/blog/news/2025/03/warning-over-free-online-file-converters-that-actually-install-malware)
 warned that many of them harvest the files you upload or push malware. Even the
 honest ones send your private photos to a server and ask you to trust a
 "deleted within an hour" promise you can't check.
