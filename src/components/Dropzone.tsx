@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { FormatChips } from './FormatChips'
 
 export function Dropzone({
   onFiles,
@@ -32,38 +33,72 @@ export function Dropzone({
         if (e.dataTransfer.files.length) onFiles(e.dataTransfer.files)
       }}
       className={[
-        'group flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed text-center transition',
-        compact ? 'gap-2 p-6' : 'gap-3 p-12',
+        'group relative flex w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border text-center transition-colors',
+        compact ? 'gap-2 p-5' : 'gap-4 p-10',
         dragging
-          ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
-          : 'border-neutral-300 bg-white hover:border-brand-400 hover:bg-brand-50/40 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-brand-500/5',
+          ? 'border-transparent'
+          : 'border border-dashed border-line hover:border-line-strong hover:bg-[oklch(1_0_0_/_0.02)]',
       ].join(' ')}
+      style={
+        dragging
+          ? {
+              boxShadow:
+                '0 0 0 1.5px var(--color-accent), 0 0 70px -12px oklch(0.72 0.19 322 / 0.7)',
+            }
+          : undefined
+      }
     >
-      <svg
+      {dragging && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 40%, oklch(0.72 0.19 322 / 0.16), transparent 70%)',
+          }}
+        />
+      )}
+
+      <div
         className={[
-          'text-brand-500 transition-transform group-hover:scale-105',
-          compact ? 'h-7 w-7' : 'h-12 w-12',
+          'relative grid place-items-center rounded-2xl transition-transform group-hover:-translate-y-0.5',
+          compact ? 'h-9 w-9' : 'h-14 w-14',
         ].join(' ')}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        style={{
+          background: 'oklch(0.72 0.19 322 / 0.12)',
+          boxShadow: 'inset 0 0 0 1px oklch(0.72 0.19 322 / 0.35)',
+        }}
       >
-        <path d="M12 16V4m0 0L8 8m4-4 4 4" />
-        <path d="M20 16.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5" />
-      </svg>
-      <div>
-        <p className="font-medium text-neutral-800 dark:text-neutral-100">
-          {compact ? 'Add more images' : 'Drop images here, or click to browse'}
+        <svg
+          className={compact ? 'h-4.5 w-4.5' : 'h-6 w-6'}
+          style={{ color: 'var(--color-accent-soft)', width: compact ? 18 : 24, height: compact ? 18 : 24 }}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 15V4m0 0L8.5 7.5M12 4l3.5 3.5" />
+          <path d="M4 14v3a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-3" />
+        </svg>
+      </div>
+
+      <div className="relative">
+        <p className="font-display font-medium text-ink">
+          {compact ? 'Add more images' : 'Drop images here'}
         </p>
         {!compact && (
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            HEIC, JPG, PNG, WebP, AVIF, GIF, BMP &middot; converted right here, never uploaded
-          </p>
+          <p className="mt-1 text-sm text-ink-mute">or click to browse, nothing gets uploaded</p>
         )}
       </div>
+
+      {!compact && (
+        <FormatChips
+          formats={['HEIC', 'JPG', 'PNG', 'WebP', 'AVIF']}
+          className="relative justify-center"
+        />
+      )}
+
       <input
         ref={inputRef}
         type="file"

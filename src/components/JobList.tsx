@@ -1,40 +1,23 @@
 import type { Job } from '../hooks/useConverter'
 import { formatBytes } from '../lib/format'
 
-function StatusBadge({ job }: { job: Job }) {
-  if (job.status === 'queued')
-    return <span className="text-xs text-neutral-400">Queued</span>
-  if (job.status === 'working')
-    return <span className="text-brand-600 dark:text-brand-400 text-xs">Converting…</span>
-  if (job.status === 'error')
-    return (
-      <span className="text-xs text-red-500" title={job.error}>
-        Failed: {job.error}
-      </span>
-    )
-  return null
-}
-
 function Savings({ job }: { job: Job }) {
   if (!job.result) return null
   const before = job.file.size
   const after = job.result.blob.size
   const pct = before > 0 ? Math.round((1 - after / before) * 100) : 0
   const smaller = pct > 0
+  const tint = smaller ? 'oklch(0.82 0.16 165)' : 'oklch(0.83 0.14 80)'
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="text-neutral-400">{formatBytes(before)}</span>
-      <span className="text-neutral-300 dark:text-neutral-600">→</span>
-      <span className="font-medium text-neutral-700 dark:text-neutral-200">
-        {formatBytes(after)}
-      </span>
+    <div className="mt-1.5 flex items-center gap-2 text-xs">
+      <span className="font-mono text-ink-mute">{formatBytes(before)}</span>
+      <svg className="h-3 w-3 text-ink-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12h14m-6-6 6 6-6 6" />
+      </svg>
+      <span className="font-mono font-medium text-ink">{formatBytes(after)}</span>
       <span
-        className={[
-          'rounded px-1.5 py-0.5 font-medium',
-          smaller
-            ? 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400'
-            : 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
-        ].join(' ')}
+        className="rounded-md px-1.5 py-0.5 font-mono font-semibold"
+        style={{ color: tint, background: `color-mix(in oklch, ${tint} 15%, transparent)` }}
       >
         {smaller ? `−${pct}%` : `+${Math.abs(pct)}%`}
       </span>
@@ -42,20 +25,35 @@ function Savings({ job }: { job: Job }) {
   )
 }
 
+function Status({ job }: { job: Job }) {
+  if (job.status === 'queued') return <p className="mt-1.5 text-xs text-ink-mute">Ready</p>
+  if (job.status === 'working')
+    return (
+      <p className="mt-1.5 text-xs" style={{ color: 'var(--color-accent-soft)' }}>
+        Converting…
+      </p>
+    )
+  if (job.status === 'error')
+    return (
+      <p className="mt-1.5 truncate text-xs" style={{ color: 'oklch(0.72 0.18 25)' }} title={job.error}>
+        Failed: {job.error}
+      </p>
+    )
+  return null
+}
+
 function Thumb({ job }: { job: Job }) {
   const src = job.result?.url ?? job.previewUrl
-  if (src)
-    return (
-      <img
-        src={src}
-        alt=""
-        loading="lazy"
-        className="h-14 w-14 shrink-0 rounded-lg object-cover ring-1 ring-neutral-200 dark:ring-neutral-700"
-      />
-    )
   return (
-    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-[10px] font-medium text-neutral-400 ring-1 ring-neutral-200 dark:bg-neutral-800 dark:ring-neutral-700">
-      HEIC
+    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl ring-1 ring-line">
+      {src ? (
+        <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+      ) : (
+        <div className="grid h-full w-full place-items-center bg-[oklch(1_0_0_/_0.04)] font-mono text-[10px] text-ink-mute">
+          HEIC
+        </div>
+      )}
+      {job.status === 'working' && <div className="shimmer absolute inset-0" />}
     </div>
   )
 }
@@ -72,40 +70,25 @@ export function JobList({
       {jobs.map((job) => (
         <li
           key={job.id}
-          className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900"
+          className="reveal flex items-center gap-3.5 rounded-2xl border border-line bg-[oklch(1_0_0_/_0.025)] p-3 transition-colors hover:border-line-strong"
         >
           <Thumb job={job} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">
-              {job.outName}
-            </p>
-            <div className="mt-1">
-              {job.status === 'done' ? <Savings job={job} /> : <StatusBadge job={job} />}
-            </div>
+            <p className="truncate text-sm font-medium text-ink">{job.outName}</p>
+            {job.status === 'done' ? <Savings job={job} /> : <Status job={job} />}
           </div>
           {job.status === 'done' && job.result && (
-            <a
-              href={job.result.url}
-              download={job.outName}
-              className="bg-brand-600 hover:bg-brand-700 rounded-lg px-3 py-1.5 text-sm font-medium text-white transition"
-            >
-              Download
+            <a href={job.result.url} download={job.outName} className="btn-primary px-3.5 py-2 text-sm">
+              Save
             </a>
           )}
           <button
             type="button"
             onClick={() => onRemove(job.id)}
-            aria-label="Remove"
-            className="rounded-lg p-1.5 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300"
+            aria-label="Remove image"
+            className="grid h-8 w-8 place-items-center rounded-lg text-ink-mute transition-colors hover:bg-[oklch(1_0_0_/_0.06)] hover:text-ink"
           >
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>

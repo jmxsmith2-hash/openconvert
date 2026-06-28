@@ -1,28 +1,242 @@
 @import "tailwindcss";
 
+/* ----------------------------------------------------------------------------
+   OpenConvert design tokens
+   Single committed dark theme. Neutrals are tinted toward violet so the surface
+   never reads as flat #000. Colors in OKLCH; chroma kept low at the dark end.
+---------------------------------------------------------------------------- */
 @theme {
-  --font-sans: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Space Grotesk Variable", system-ui, sans-serif;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
 
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-300: #c4b5fd;
-  --color-brand-400: #a78bfa;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #7c3aed;
-  --color-brand-700: #6d28d9;
+  /* surfaces (violet-tinted near-black) */
+  --color-base: oklch(0.16 0.013 290);
+  --color-base-deep: oklch(0.13 0.012 290);
+  --color-surface: oklch(0.205 0.016 290);
+  --color-surface-2: oklch(0.245 0.018 289);
+  --color-line: oklch(1 0 0 / 0.09);
+  --color-line-strong: oklch(1 0 0 / 0.16);
+
+  /* ink */
+  --color-ink: oklch(0.97 0.006 285);
+  --color-ink-soft: oklch(0.75 0.02 286);
+  --color-ink-mute: oklch(0.61 0.022 286);
+
+  /* accents */
+  --color-accent: oklch(0.72 0.19 322);
+  --color-accent-soft: oklch(0.8 0.13 322);
+  --color-cyan: oklch(0.82 0.13 200);
+  --color-fuchsia: oklch(0.7 0.25 350);
+  --color-violet: oklch(0.62 0.21 300);
+  --color-emerald: oklch(0.82 0.16 165);
+  --color-amber: oklch(0.83 0.14 80);
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
 }
 
-html,
-body,
-#root {
-  height: 100%;
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-base);
+    color: var(--color-ink-soft);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: oklch(0.72 0.19 322 / 0.32);
+    color: var(--color-ink);
+  }
+  *:focus-visible {
+    outline: 2px solid var(--color-accent-soft);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    letter-spacing: -0.02em;
+  }
 }
 
-body {
-  margin: 0;
+/* ----------------------------------------------------------------------------
+   Texture + atmosphere
+---------------------------------------------------------------------------- */
+@layer components {
+  /* faint engineering grid */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* primary action: solid accent (no gradient text anywhere) */
+  .btn-primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.85rem;
+    background: var(--color-accent);
+    color: oklch(0.16 0.02 320);
+    font-weight: 600;
+    box-shadow: 0 0 0 1px oklch(0.8 0.13 322 / 0.4) inset,
+      0 10px 30px -10px oklch(0.72 0.19 322 / 0.7);
+    transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.18s ease, filter 0.18s ease;
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow: 0 0 0 1px oklch(0.85 0.13 322 / 0.5) inset,
+      0 16px 40px -12px oklch(0.72 0.19 322 / 0.85);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.85rem;
+    border: 1px solid var(--color-line);
+    background: oklch(1 0 0 / 0.02);
+    color: var(--color-ink-soft);
+    font-weight: 500;
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-line-strong);
+    background: oklch(1 0 0 / 0.05);
+    color: var(--color-ink);
+  }
+  .btn-ghost:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* custom range slider */
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--track, oklch(1 0 0 / 0.12));
+    cursor: pointer;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--color-ink);
+    border: 3px solid var(--color-accent);
+    box-shadow: 0 2px 8px oklch(0 0 0 / 0.4);
+    transition: transform 0.15s ease;
+  }
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+  }
+  .slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--color-ink);
+    border: 3px solid var(--color-accent);
+  }
+  .slider:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* custom-skinned select */
+  .select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a78bd6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+  }
 }
 
-* {
-  box-sizing: border-box;
+/* ----------------------------------------------------------------------------
+   Motion
+---------------------------------------------------------------------------- */
+@keyframes oc-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes oc-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes oc-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) scale(1.06);
+  }
+}
+@keyframes oc-shimmer {
+  100% {
+    background-position: 200% 0;
+  }
+}
+@keyframes oc-dash {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+.reveal {
+  animation: oc-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.shimmer {
+  background: linear-gradient(
+    100deg,
+    oklch(1 0 0 / 0) 30%,
+    oklch(1 0 0 / 0.09) 50%,
+    oklch(1 0 0 / 0) 70%
+  );
+  background-size: 200% 100%;
+  animation: oc-shimmer 1.3s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
