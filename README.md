@@ -88,4 +88,4 @@ PRs welcome. The conversion logic lives in [`src/lib/`](src/lib) (`convert.ts` f
 
 ## License
 
-[MIT](LICENSE). Built for the love of the game.
+[MIT](LICENSE).
