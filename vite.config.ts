@@ -6,8 +6,16 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss()],
-  // jSquash ships its own wasm; let it load those itself instead of pre-bundling.
+  // jSquash and ffmpeg.wasm ship their own wasm/workers; don't pre-bundle them.
   optimizeDeps: {
-    exclude: ['@jsquash/avif', '@jsquash/jpeg', '@jsquash/png', '@jsquash/webp', '@jsquash/resize'],
+    exclude: [
+      '@jsquash/avif',
+      '@jsquash/jpeg',
+      '@jsquash/png',
+      '@jsquash/webp',
+      '@jsquash/resize',
+      '@ffmpeg/ffmpeg',
+      '@ffmpeg/util',
+    ],
   },
 })

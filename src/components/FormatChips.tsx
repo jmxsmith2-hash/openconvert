@@ -8,6 +8,14 @@ export const FORMAT_TINT: Record<string, string> = {
   AVIF: 'oklch(0.78 0.2 350)',
   GIF: 'oklch(0.8 0.12 230)',
   BMP: 'oklch(0.78 0.05 286)',
+  // audio / video
+  MP4: 'oklch(0.75 0.17 300)',
+  MOV: 'oklch(0.82 0.13 200)',
+  WebM: 'oklch(0.78 0.2 350)',
+  MP3: 'oklch(0.83 0.14 80)',
+  WAV: 'oklch(0.82 0.16 165)',
+  M4A: 'oklch(0.78 0.2 350)',
+  OGG: 'oklch(0.8 0.12 230)',
 }
 
 export function FormatChips({

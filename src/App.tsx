@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Backdrop } from './components/Backdrop'
 import { Controls } from './components/Controls'
 import { Dropzone } from './components/Dropzone'
@@ -6,43 +6,65 @@ import { FormatChips } from './components/FormatChips'
 import { HeroArt } from './components/HeroArt'
 import { JobList } from './components/JobList'
 import { Logo } from './components/Logo'
+import { MediaControls } from './components/MediaControls'
+import { MediaJobList } from './components/MediaJobList'
 import { useConverter } from './hooks/useConverter'
+import { useMediaConverter } from './hooks/useMediaConverter'
 import { zipBlobs } from './lib/zip'
 
 const REPO_URL = 'https://github.com/jmxsmith2-hash/openconvert'
 
+type Mode = 'image' | 'av'
+
+async function downloadZip(entries: { name: string; blob: Blob }[]) {
+  const blob = await zipBlobs(entries)
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'openconvert.zip'
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 5000)
+}
+
+function Bench({ aside, children }: { aside: ReactNode; children: ReactNode }) {
+  return (
+    <div className="grid lg:grid-cols-[18.5rem_1fr]">
+      <aside className="flex flex-col gap-6 border-line p-6 max-lg:border-b lg:border-r">{aside}</aside>
+      <div className="flex flex-col gap-4 p-6">{children}</div>
+    </div>
+  )
+}
+
+function EmptyState({ line }: { line: string }) {
+  return (
+    <div className="grid flex-1 place-items-center rounded-2xl px-6 py-10 text-center">
+      <div>
+        <p className="font-display text-ink-soft">Your converted files land here</p>
+        <p className="mt-1 text-sm text-ink-mute">{line}</p>
+      </div>
+    </div>
+  )
+}
+
 function App() {
-  const {
-    jobs,
-    options,
-    setOptions,
-    addFiles,
-    removeJob,
-    clear,
-    convertAll,
-    isConverting,
-    doneJobs,
-    pendingCount,
-  } = useConverter()
+  const [mode, setMode] = useState<Mode>('image')
+  const img = useConverter()
+  const av = useMediaConverter()
   const [zipping, setZipping] = useState(false)
 
-  async function downloadAll() {
-    if (!doneJobs.length) return
+  async function zip(entries: { name: string; blob: Blob }[]) {
     setZipping(true)
     try {
-      const blob = await zipBlobs(doneJobs.map((j) => ({ name: j.outName, blob: j.result!.blob })))
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'openconvert.zip'
-      a.click()
-      setTimeout(() => URL.revokeObjectURL(url), 5000)
+      await downloadZip(entries)
     } finally {
       setZipping(false)
     }
   }
 
-  const hasJobs = jobs.length > 0
+  const tabs: { id: Mode; label: string }[] = [
+    { id: 'image', label: 'Images' },
+    { id: 'av', label: 'Audio & Video' },
+  ]
 
   return (
     <div className="relative min-h-full">
@@ -51,9 +73,7 @@ function App() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
           <Logo />
-          <span className="font-display text-lg font-semibold tracking-tight text-ink">
-            OpenConvert
-          </span>
+          <span className="font-display text-lg font-semibold tracking-tight text-ink">OpenConvert</span>
         </div>
         <a href={REPO_URL} target="_blank" rel="noreferrer" className="btn-ghost px-3.5 py-2 text-sm">
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -71,80 +91,165 @@ function App() {
               Open source · runs 100% on your device
             </p>
             <h1 className="mt-5 font-display text-4xl leading-[1.05] font-semibold text-ink sm:text-5xl lg:text-[3.4rem]">
-              Convert images without{' '}
+              Convert files without{' '}
               <span style={{ color: 'var(--color-accent-soft)' }}>handing them over.</span>
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-ink-soft">
-              HEIC, JPG, PNG, WebP and AVIF, converted right here in your browser. No upload, no
-              account, no watermark. The code is open, so the privacy isn&apos;t a promise you have
-              to take on faith.
+              Images, audio and video, converted right here in your browser. No upload, no account,
+              no watermark. The code is open, so the privacy isn&apos;t a promise you have to take on
+              faith.
             </p>
-            <FormatChips
-              formats={['HEIC', 'JPG', 'PNG', 'WebP', 'AVIF']}
-              className="mt-7"
-            />
+            <FormatChips formats={['HEIC', 'JPG', 'PNG', 'MP4', 'MP3', 'WAV']} className="mt-7" />
           </div>
           <div className="relative">
             <HeroArt />
           </div>
         </section>
 
-        {/* converter workbench */}
+        {/* workbench */}
         <section
           className="reveal overflow-hidden rounded-3xl border border-line bg-surface"
           style={{ boxShadow: '0 1px 0 oklch(1 0 0 / 0.05) inset, 0 40px 80px -40px oklch(0 0 0 / 0.8)' }}
         >
-          <div className="grid lg:grid-cols-[18.5rem_1fr]">
-            <aside className="flex flex-col gap-6 border-line p-6 max-lg:border-b lg:border-r">
-              <Controls options={options} setOptions={setOptions} disabled={isConverting} />
-
-              {hasJobs && (
-                <div className="flex flex-col gap-2 border-t border-line pt-5">
-                  <button
-                    type="button"
-                    onClick={convertAll}
-                    disabled={isConverting || pendingCount === 0}
-                    className="btn-primary py-2.5"
-                  >
-                    {isConverting
-                      ? 'Converting…'
-                      : pendingCount > 0
-                        ? `Convert ${pendingCount} image${pendingCount > 1 ? 's' : ''}`
-                        : 'All done'}
-                  </button>
-                  {doneJobs.length > 0 && (
-                    <button type="button" onClick={downloadAll} disabled={zipping} className="btn-ghost py-2.5">
-                      {zipping ? 'Zipping…' : `Download all (${doneJobs.length}) as ZIP`}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={clear}
-                    disabled={isConverting}
-                    className="py-1.5 text-sm text-ink-mute transition-colors hover:text-ink-soft disabled:opacity-50"
-                  >
-                    Clear all
-                  </button>
-                </div>
-              )}
-            </aside>
-
-            <div className="flex flex-col gap-4 p-6">
-              <Dropzone onFiles={addFiles} compact={hasJobs} />
-              {hasJobs ? (
-                <JobList jobs={jobs} onRemove={removeJob} />
-              ) : (
-                <div className="grid flex-1 place-items-center rounded-2xl px-6 py-10 text-center">
-                  <div>
-                    <p className="font-display text-ink-soft">Your converted images land here</p>
-                    <p className="mt-1 text-sm text-ink-mute">
-                      Drop a batch above, tune the format, convert.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="flex gap-1 border-b border-line p-2">
+            {tabs.map((t) => {
+              const active = mode === t.id
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setMode(t.id)}
+                  className="rounded-xl px-4 py-2 text-sm font-semibold transition-colors"
+                  style={
+                    active
+                      ? { background: 'oklch(1 0 0 / 0.06)', color: 'var(--color-ink)' }
+                      : { color: 'var(--color-ink-mute)' }
+                  }
+                >
+                  {t.label}
+                </button>
+              )
+            })}
           </div>
+
+          {mode === 'image' ? (
+            <Bench
+              aside={
+                <>
+                  <Controls options={img.options} setOptions={img.setOptions} disabled={img.isConverting} />
+                  {img.jobs.length > 0 && (
+                    <div className="flex flex-col gap-2 border-t border-line pt-5">
+                      <button
+                        type="button"
+                        onClick={img.convertAll}
+                        disabled={img.isConverting || img.pendingCount === 0}
+                        className="btn-primary py-2.5"
+                      >
+                        {img.isConverting
+                          ? 'Converting…'
+                          : img.pendingCount > 0
+                            ? `Convert ${img.pendingCount} image${img.pendingCount > 1 ? 's' : ''}`
+                            : 'All done'}
+                      </button>
+                      {img.doneJobs.length > 0 && (
+                        <button
+                          type="button"
+                          disabled={zipping}
+                          onClick={() => zip(img.doneJobs.map((j) => ({ name: j.outName, blob: j.result!.blob })))}
+                          className="btn-ghost py-2.5"
+                        >
+                          {zipping ? 'Zipping…' : `Download all (${img.doneJobs.length}) as ZIP`}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={img.clear}
+                        disabled={img.isConverting}
+                        className="py-1.5 text-sm text-ink-mute transition-colors hover:text-ink-soft disabled:opacity-50"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  )}
+                </>
+              }
+            >
+              <Dropzone onFiles={img.addFiles} compact={img.jobs.length > 0} />
+              {img.jobs.length > 0 ? (
+                <JobList jobs={img.jobs} onRemove={img.removeJob} />
+              ) : (
+                <EmptyState line="Drop a batch above, pick a format, convert." />
+              )}
+            </Bench>
+          ) : (
+            <Bench
+              aside={
+                <>
+                  <MediaControls
+                    format={av.format}
+                    formats={av.formats}
+                    setFormat={av.setFormat}
+                    disabled={av.isConverting}
+                  />
+                  {av.jobs.length > 0 && (
+                    <div className="flex flex-col gap-2 border-t border-line pt-5">
+                      <button
+                        type="button"
+                        onClick={av.convertAll}
+                        disabled={av.isConverting || av.pendingCount === 0}
+                        className="btn-primary py-2.5"
+                      >
+                        {av.coreLoading
+                          ? 'Preparing converter…'
+                          : av.isConverting
+                            ? 'Converting…'
+                            : av.pendingCount > 0
+                              ? `Convert ${av.pendingCount} file${av.pendingCount > 1 ? 's' : ''}`
+                              : 'All done'}
+                      </button>
+                      {av.coreLoading && (
+                        <p className="text-center text-xs text-ink-mute">
+                          Loading the converter, one-time ~31 MB.
+                        </p>
+                      )}
+                      {av.doneJobs.length > 0 && (
+                        <button
+                          type="button"
+                          disabled={zipping}
+                          onClick={() => zip(av.doneJobs.map((j) => ({ name: j.outName, blob: j.result!.blob })))}
+                          className="btn-ghost py-2.5"
+                        >
+                          {zipping ? 'Zipping…' : `Download all (${av.doneJobs.length}) as ZIP`}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={av.clear}
+                        disabled={av.isConverting}
+                        className="py-1.5 text-sm text-ink-mute transition-colors hover:text-ink-soft disabled:opacity-50"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  )}
+                </>
+              }
+            >
+              <Dropzone
+                onFiles={av.addFiles}
+                compact={av.jobs.length > 0}
+                accept="audio/*,video/*"
+                title="Drop audio or video here"
+                compactTitle="Add more files"
+                chips={['MP4', 'MOV', 'WebM', 'MP3', 'WAV']}
+              />
+              {av.jobs.length > 0 ? (
+                <MediaJobList jobs={av.jobs} onRemove={av.removeJob} />
+              ) : (
+                <EmptyState line="Drop a clip above, pick a format, convert. Big files stay on your device." />
+              )}
+            </Bench>
+          )}
         </section>
 
         {/* why */}
@@ -161,7 +266,7 @@ function App() {
 
           <ol className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-3">
             {[
-              { n: '01', t: 'Nothing is uploaded', d: 'Decoding and encoding happen in this tab. No server ever receives your photos.' },
+              { n: '01', t: 'Nothing is uploaded', d: 'Decoding and encoding happen in this tab. No server ever receives your files.' },
               { n: '02', t: 'No account, no walls', d: 'No sign-up, no watermark, no size limit that turns into a paywall.' },
               { n: '03', t: 'Open and auditable', d: 'The full source is public, so the privacy claim is something you can verify.' },
             ].map((p) => (

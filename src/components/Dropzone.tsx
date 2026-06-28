@@ -4,9 +4,17 @@ import { FormatChips } from './FormatChips'
 export function Dropzone({
   onFiles,
   compact = false,
+  accept = 'image/*,.heic,.heif',
+  title = 'Drop images here',
+  compactTitle = 'Add more images',
+  chips = ['HEIC', 'JPG', 'PNG', 'WebP', 'AVIF'],
 }: {
   onFiles: (files: FileList | File[]) => void
   compact?: boolean
+  accept?: string
+  title?: string
+  compactTitle?: string
+  chips?: string[]
 }) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -69,7 +77,6 @@ export function Dropzone({
         }}
       >
         <svg
-          className={compact ? 'h-4.5 w-4.5' : 'h-6 w-6'}
           style={{ color: 'var(--color-accent-soft)', width: compact ? 18 : 24, height: compact ? 18 : 24 }}
           viewBox="0 0 24 24"
           fill="none"
@@ -84,25 +91,18 @@ export function Dropzone({
       </div>
 
       <div className="relative">
-        <p className="font-display font-medium text-ink">
-          {compact ? 'Add more images' : 'Drop images here'}
-        </p>
+        <p className="font-display font-medium text-ink">{compact ? compactTitle : title}</p>
         {!compact && (
           <p className="mt-1 text-sm text-ink-mute">or click to browse, nothing gets uploaded</p>
         )}
       </div>
 
-      {!compact && (
-        <FormatChips
-          formats={['HEIC', 'JPG', 'PNG', 'WebP', 'AVIF']}
-          className="relative justify-center"
-        />
-      )}
+      {!compact && <FormatChips formats={chips} className="relative justify-center" />}
 
       <input
         ref={inputRef}
         type="file"
-        accept="image/*,.heic,.heif"
+        accept={accept}
         multiple
         hidden
         onChange={(e) => {
