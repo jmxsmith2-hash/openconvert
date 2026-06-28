@@ -5,8 +5,7 @@ import { JobList } from './components/JobList'
 import { useConverter } from './hooks/useConverter'
 import { zipBlobs } from './lib/zip'
 
-// Update this to your repository before publishing.
-const REPO_URL = 'https://github.com/your-name/openconvert'
+const REPO_URL = 'https://github.com/jmxsmith2-hash/openconvert'
 
 function App() {
   const {
