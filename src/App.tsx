@@ -10,21 +10,10 @@ import { MediaControls } from './components/MediaControls'
 import { MediaJobList } from './components/MediaJobList'
 import { useConverter } from './hooks/useConverter'
 import { useMediaConverter } from './hooks/useMediaConverter'
+import { mediaKind } from './lib/media'
 import { zipBlobs } from './lib/zip'
 
 const REPO_URL = 'https://github.com/jmxsmith2-hash/openconvert'
-
-type Mode = 'image' | 'av'
-
-async function downloadZip(entries: { name: string; blob: Blob }[]) {
-  const blob = await zipBlobs(entries)
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'openconvert.zip'
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 5000)
-}
 
 function Bench({ aside, children }: { aside: ReactNode; children: ReactNode }) {
   return (
@@ -35,36 +24,74 @@ function Bench({ aside, children }: { aside: ReactNode; children: ReactNode }) {
   )
 }
 
-function EmptyState({ line }: { line: string }) {
-  return (
-    <div className="grid flex-1 place-items-center rounded-2xl px-6 py-10 text-center">
-      <div>
-        <p className="font-display text-ink-soft">Your converted files land here</p>
-        <p className="mt-1 text-sm text-ink-mute">{line}</p>
-      </div>
-    </div>
-  )
+function GroupLabel({ children }: { children: ReactNode }) {
+  return <p className="mb-3 text-xs font-semibold text-ink-soft">{children}</p>
 }
 
 function App() {
-  const [mode, setMode] = useState<Mode>('image')
   const img = useConverter()
   const av = useMediaConverter()
   const [zipping, setZipping] = useState(false)
 
-  async function zip(entries: { name: string; blob: Blob }[]) {
+  // One dropzone for everything: sort each file into the right engine automatically.
+  function route(files: FileList | File[]) {
+    const arr = Array.from(files)
+    const images = arr.filter((f) => mediaKind(f) === 'image')
+    const media = arr.filter((f) => {
+      const k = mediaKind(f)
+      return k === 'audio' || k === 'video'
+    })
+    if (images.length) img.addFiles(images)
+    if (media.length) av.addFiles(media)
+  }
+
+  const hasImages = img.jobs.length > 0
+  const hasMedia = av.jobs.length > 0
+  const hasAny = hasImages || hasMedia
+  const bothKinds = hasImages && hasMedia
+
+  const pending = img.pendingCount + av.pendingCount
+  const doneCount = img.doneJobs.length + av.doneJobs.length
+  const isConverting = img.isConverting || av.isConverting
+  const busy = isConverting || zipping
+
+  async function convertEverything() {
+    if (img.pendingCount > 0) await img.convertAll()
+    if (av.pendingCount > 0) await av.convertAll()
+  }
+
+  async function downloadAll() {
+    if (!doneCount) return
     setZipping(true)
     try {
-      await downloadZip(entries)
+      const entries = [
+        ...img.doneJobs.map((j) => ({ name: j.outName, blob: j.result!.blob })),
+        ...av.doneJobs.map((j) => ({ name: j.outName, blob: j.result!.blob })),
+      ]
+      const blob = await zipBlobs(entries)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'openconvert.zip'
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 5000)
     } finally {
       setZipping(false)
     }
   }
 
-  const tabs: { id: Mode; label: string }[] = [
-    { id: 'image', label: 'Images' },
-    { id: 'av', label: 'Audio & Video' },
-  ]
+  function clearAll() {
+    img.clear()
+    av.clear()
+  }
+
+  const convertLabel = av.coreLoading
+    ? 'Preparing converter…'
+    : isConverting
+      ? 'Converting…'
+      : pending > 0
+        ? `Convert ${pending} file${pending > 1 ? 's' : ''}`
+        : 'All done'
 
   return (
     <div className="relative min-h-full">
@@ -95,9 +122,9 @@ function App() {
               <span style={{ color: 'var(--color-accent-soft)' }}>handing them over.</span>
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-ink-soft">
-              Images, audio and video, converted right here in your browser. No upload, no account,
-              no watermark. The code is open, so the privacy isn&apos;t a promise you have to take on
-              faith.
+              Drop an image, audio, or video file and convert it right here in your browser. No
+              upload, no account, no watermark. The code is open, so the privacy isn&apos;t a promise
+              you have to take on faith.
             </p>
             <FormatChips formats={['HEIC', 'JPG', 'PNG', 'MP4', 'MP3', 'WAV']} className="mt-7" />
           </div>
@@ -111,145 +138,83 @@ function App() {
           className="reveal overflow-hidden rounded-3xl border border-line bg-surface"
           style={{ boxShadow: '0 1px 0 oklch(1 0 0 / 0.05) inset, 0 40px 80px -40px oklch(0 0 0 / 0.8)' }}
         >
-          <div className="flex gap-1 border-b border-line p-2">
-            {tabs.map((t) => {
-              const active = mode === t.id
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setMode(t.id)}
-                  className="rounded-xl px-4 py-2 text-sm font-semibold transition-colors"
-                  style={
-                    active
-                      ? { background: 'oklch(1 0 0 / 0.06)', color: 'var(--color-ink)' }
-                      : { color: 'var(--color-ink-mute)' }
-                  }
-                >
-                  {t.label}
-                </button>
-              )
-            })}
-          </div>
+          <Bench
+            aside={
+              hasAny ? (
+                <>
+                  {hasImages && (
+                    <div>
+                      {bothKinds && <GroupLabel>Images</GroupLabel>}
+                      <Controls options={img.options} setOptions={img.setOptions} disabled={img.isConverting} />
+                    </div>
+                  )}
+                  {hasMedia && (
+                    <div className={bothKinds ? 'border-t border-line pt-6' : undefined}>
+                      {bothKinds && <GroupLabel>Audio &amp; video</GroupLabel>}
+                      <MediaControls format={av.format} formats={av.formats} setFormat={av.setFormat} disabled={av.isConverting} />
+                    </div>
+                  )}
 
-          {mode === 'image' ? (
-            <Bench
-              aside={
-                <>
-                  <Controls options={img.options} setOptions={img.setOptions} disabled={img.isConverting} />
-                  {img.jobs.length > 0 && (
-                    <div className="flex flex-col gap-2 border-t border-line pt-5">
-                      <button
-                        type="button"
-                        onClick={img.convertAll}
-                        disabled={img.isConverting || img.pendingCount === 0}
-                        className="btn-primary py-2.5"
-                      >
-                        {img.isConverting
-                          ? 'Converting…'
-                          : img.pendingCount > 0
-                            ? `Convert ${img.pendingCount} image${img.pendingCount > 1 ? 's' : ''}`
-                            : 'All done'}
+                  <div className="flex flex-col gap-2 border-t border-line pt-5">
+                    <button type="button" onClick={convertEverything} disabled={busy || pending === 0} className="btn-primary py-2.5">
+                      {convertLabel}
+                    </button>
+                    {av.coreLoading && (
+                      <p className="text-center text-xs text-ink-mute">Loading the converter, one-time ~31 MB.</p>
+                    )}
+                    {doneCount > 0 && (
+                      <button type="button" onClick={downloadAll} disabled={zipping} className="btn-ghost py-2.5">
+                        {zipping ? 'Zipping…' : `Download all (${doneCount}) as ZIP`}
                       </button>
-                      {img.doneJobs.length > 0 && (
-                        <button
-                          type="button"
-                          disabled={zipping}
-                          onClick={() => zip(img.doneJobs.map((j) => ({ name: j.outName, blob: j.result!.blob })))}
-                          className="btn-ghost py-2.5"
-                        >
-                          {zipping ? 'Zipping…' : `Download all (${img.doneJobs.length}) as ZIP`}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={img.clear}
-                        disabled={img.isConverting}
-                        className="py-1.5 text-sm text-ink-mute transition-colors hover:text-ink-soft disabled:opacity-50"
-                      >
-                        Clear all
-                      </button>
-                    </div>
-                  )}
+                    )}
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      disabled={isConverting}
+                      className="py-1.5 text-sm text-ink-mute transition-colors hover:text-ink-soft disabled:opacity-50"
+                    >
+                      Clear all
+                    </button>
+                  </div>
                 </>
-              }
-            >
-              <Dropzone onFiles={img.addFiles} compact={img.jobs.length > 0} />
-              {img.jobs.length > 0 ? (
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm font-medium text-ink">How it works</p>
+                  <ol className="flex flex-col gap-2.5 text-sm text-ink-mute">
+                    <li>1. Drop any image, audio, or video file.</li>
+                    <li>2. Pick what to convert it to.</li>
+                    <li>3. Convert and download. Nothing is uploaded.</li>
+                  </ol>
+                </div>
+              )
+            }
+          >
+            <Dropzone
+              onFiles={route}
+              compact={hasAny}
+              accept="image/*,audio/*,video/*,.heic,.heif"
+              title="Drop your files here"
+              compactTitle="Add more files"
+              chips={['HEIC', 'JPG', 'PNG', 'AVIF', 'MP4', 'MP3', 'WAV']}
+            />
+            {hasImages && (
+              <div className="flex flex-col gap-2">
+                {bothKinds && <GroupLabel>Images</GroupLabel>}
                 <JobList jobs={img.jobs} onRemove={img.removeJob} />
-              ) : (
-                <EmptyState line="Drop a batch above, pick a format, convert." />
-              )}
-            </Bench>
-          ) : (
-            <Bench
-              aside={
-                <>
-                  <MediaControls
-                    format={av.format}
-                    formats={av.formats}
-                    setFormat={av.setFormat}
-                    disabled={av.isConverting}
-                  />
-                  {av.jobs.length > 0 && (
-                    <div className="flex flex-col gap-2 border-t border-line pt-5">
-                      <button
-                        type="button"
-                        onClick={av.convertAll}
-                        disabled={av.isConverting || av.pendingCount === 0}
-                        className="btn-primary py-2.5"
-                      >
-                        {av.coreLoading
-                          ? 'Preparing converter…'
-                          : av.isConverting
-                            ? 'Converting…'
-                            : av.pendingCount > 0
-                              ? `Convert ${av.pendingCount} file${av.pendingCount > 1 ? 's' : ''}`
-                              : 'All done'}
-                      </button>
-                      {av.coreLoading && (
-                        <p className="text-center text-xs text-ink-mute">
-                          Loading the converter, one-time ~31 MB.
-                        </p>
-                      )}
-                      {av.doneJobs.length > 0 && (
-                        <button
-                          type="button"
-                          disabled={zipping}
-                          onClick={() => zip(av.doneJobs.map((j) => ({ name: j.outName, blob: j.result!.blob })))}
-                          className="btn-ghost py-2.5"
-                        >
-                          {zipping ? 'Zipping…' : `Download all (${av.doneJobs.length}) as ZIP`}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={av.clear}
-                        disabled={av.isConverting}
-                        className="py-1.5 text-sm text-ink-mute transition-colors hover:text-ink-soft disabled:opacity-50"
-                      >
-                        Clear all
-                      </button>
-                    </div>
-                  )}
-                </>
-              }
-            >
-              <Dropzone
-                onFiles={av.addFiles}
-                compact={av.jobs.length > 0}
-                accept="audio/*,video/*"
-                title="Drop audio or video here"
-                compactTitle="Add more files"
-                chips={['MP4', 'MOV', 'WebM', 'MP3', 'WAV']}
-              />
-              {av.jobs.length > 0 ? (
+              </div>
+            )}
+            {hasMedia && (
+              <div className="flex flex-col gap-2">
+                {bothKinds && <GroupLabel>Audio &amp; video</GroupLabel>}
                 <MediaJobList jobs={av.jobs} onRemove={av.removeJob} />
-              ) : (
-                <EmptyState line="Drop a clip above, pick a format, convert. Big files stay on your device." />
-              )}
-            </Bench>
-          )}
+              </div>
+            )}
+            {!hasAny && (
+              <div className="grid flex-1 place-items-center rounded-2xl px-6 py-10 text-center">
+                <p className="text-sm text-ink-mute">Your converted files will appear here.</p>
+              </div>
+            )}
+          </Bench>
         </section>
 
         {/* why */}

@@ -32,9 +32,9 @@ export function Controls({
   } as CSSProperties
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <div>
-        <Label>Format</Label>
+        <Label>Convert to</Label>
         <div className="mt-2.5 grid grid-cols-4 gap-1 rounded-xl border border-line bg-[oklch(1_0_0_/_0.02)] p-1">
           {OUTPUT_FORMATS.map((f: OutputFormat) => {
             const active = options.format === f
@@ -59,44 +59,55 @@ export function Controls({
         </div>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between">
-          <Label>Quality</Label>
-          <span className="font-mono text-sm text-ink">
-            {meta.lossy ? options.quality : 'lossless'}
-          </span>
-        </div>
-        <input
-          type="range"
-          min={1}
-          max={100}
-          value={options.quality}
-          disabled={disabled || !meta.lossy}
-          onChange={(e) => setOptions({ quality: Number(e.target.value) })}
-          className="slider mt-3"
-          style={trackStyle}
-        />
-        {!meta.lossy && <p className="mt-2 text-xs text-ink-mute">PNG keeps every pixel exact.</p>}
-      </div>
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-ink-mute transition-colors hover:text-ink-soft [&::-webkit-details-marker]:hidden">
+          <svg className="h-3 w-3 transition-transform group-open:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+          Quality &amp; size
+        </summary>
 
-      <div>
-        <Label>Resize</Label>
-        <select
-          value={options.maxDimension ?? ''}
-          disabled={disabled}
-          onChange={(e) =>
-            setOptions({ maxDimension: e.target.value === '' ? null : Number(e.target.value) })
-          }
-          className="select mt-2.5 w-full rounded-xl border border-line bg-[oklch(1_0_0_/_0.02)] px-3.5 py-2.5 text-sm text-ink transition hover:border-line-strong disabled:opacity-50"
-        >
-          {RESIZE_OPTIONS.map((o) => (
-            <option key={o.label} value={o.value ?? ''} className="bg-surface text-ink">
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <p className="mt-2 text-xs text-ink-mute">Shrinks large images, never upscales.</p>
-      </div>
+        <div className="mt-4 flex flex-col gap-5">
+          <div>
+            <div className="flex items-center justify-between">
+              <Label>Quality</Label>
+              <span className="font-mono text-sm text-ink">
+                {meta.lossy ? options.quality : 'lossless'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={100}
+              value={options.quality}
+              disabled={disabled || !meta.lossy}
+              onChange={(e) => setOptions({ quality: Number(e.target.value) })}
+              className="slider mt-3"
+              style={trackStyle}
+            />
+            {!meta.lossy && <p className="mt-2 text-xs text-ink-mute">PNG keeps every pixel exact.</p>}
+          </div>
+
+          <div>
+            <Label>Resize</Label>
+            <select
+              value={options.maxDimension ?? ''}
+              disabled={disabled}
+              onChange={(e) =>
+                setOptions({ maxDimension: e.target.value === '' ? null : Number(e.target.value) })
+              }
+              className="select mt-2.5 w-full rounded-xl border border-line bg-[oklch(1_0_0_/_0.02)] px-3.5 py-2.5 text-sm text-ink transition hover:border-line-strong disabled:opacity-50"
+            >
+              {RESIZE_OPTIONS.map((o) => (
+                <option key={o.label} value={o.value ?? ''} className="bg-surface text-ink">
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-ink-mute">Shrinks large images, never upscales.</p>
+          </div>
+        </div>
+      </details>
     </div>
   )
 }
