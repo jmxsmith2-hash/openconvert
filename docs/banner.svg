@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 340" width="1280" height="340" font-family="'Segoe UI', system-ui, -apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e879f9"/>
+      <stop offset="0.5" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <radialGradient id="glowV" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7c3aed" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowC" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowF" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#e879f9" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#e879f9" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="panel">
+      <rect x="1" y="1" width="1278" height="338" rx="28"/>
+    </clipPath>
+  </defs>
+
+  <!-- panel -->
+  <rect x="1" y="1" width="1278" height="338" rx="28" fill="#0b0b12" stroke="#ffffff" stroke-opacity="0.08"/>
+  <g clip-path="url(#panel)">
+    <circle cx="170" cy="40" r="300" fill="url(#glowV)"/>
+    <circle cx="820" cy="20" r="240" fill="url(#glowF)"/>
+    <circle cx="1180" cy="330" r="320" fill="url(#glowC)"/>
+    <g stroke="#ffffff" stroke-opacity="0.03">
+      <path d="M0 113 H1280 M0 227 H1280 M213 0 V340 M426 0 V340 M640 0 V340 M853 0 V340 M1066 0 V340"/>
+    </g>
+  </g>
+
+  <!-- logo mark -->
+  <g transform="translate(72,74)">
+    <rect x="0" y="0" width="60" height="60" rx="17" fill="#15151f" stroke="#ffffff" stroke-opacity="0.12"/>
+    <path d="M30 13 L45 41 H15 Z" fill="none" stroke="url(#brand)" stroke-width="3.4" stroke-linejoin="round"/>
+    <circle cx="30" cy="32" r="6.4" fill="url(#brand)"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="156" y="118" font-size="58" font-weight="700" fill="#f4f4f5" letter-spacing="-1.5">OpenConvert</text>
+  <text x="158" y="160" font-size="23" fill="#aab0bd">Private, in-browser file conversion.</text>
+  <text x="158" y="190" font-size="19" fill="#7b8190" font-weight="600">No upload &#183; No account &#183; No watermark &#183; Open source</text>
+
+  <!-- format chips -->
+  <g transform="translate(158,222)" font-size="14" font-weight="700" font-family="ui-monospace, Menlo, Consolas, monospace">
+    <g><rect width="60" height="30" rx="8" fill="#34d39922" stroke="#34d399" stroke-opacity="0.5"/><text x="30" y="20" text-anchor="middle" fill="#34d399">HEIC</text></g>
+    <g transform="translate(70,0)"><rect width="52" height="30" rx="8" fill="#f5b74022" stroke="#f5b740" stroke-opacity="0.5"/><text x="26" y="20" text-anchor="middle" fill="#f5b740">JPG</text></g>
+    <g transform="translate(132,0)"><rect width="52" height="30" rx="8" fill="#22d3ee22" stroke="#22d3ee" stroke-opacity="0.5"/><text x="26" y="20" text-anchor="middle" fill="#22d3ee">PNG</text></g>
+    <g transform="translate(194,0)"><rect width="58" height="30" rx="8" fill="#e879f922" stroke="#e879f9" stroke-opacity="0.5"/><text x="29" y="20" text-anchor="middle" fill="#e879f9">AVIF</text></g>
+    <g transform="translate(262,0)"><rect width="56" height="30" rx="8" fill="#a855f722" stroke="#a855f7" stroke-opacity="0.5"/><text x="28" y="20" text-anchor="middle" fill="#c79bff">MP4</text></g>
+    <g transform="translate(328,0)"><rect width="56" height="30" rx="8" fill="#f5b74022" stroke="#f5b740" stroke-opacity="0.5"/><text x="28" y="20" text-anchor="middle" fill="#f5b740">MP3</text></g>
+    <g transform="translate(394,0)"><rect width="56" height="30" rx="8" fill="#34d39922" stroke="#34d399" stroke-opacity="0.5"/><text x="28" y="20" text-anchor="middle" fill="#34d399">WAV</text></g>
+  </g>
+
+  <!-- prism dispersion motif -->
+  <g transform="translate(905,96)">
+    <!-- rays -->
+    <g fill="none" stroke-width="2.4" stroke-linecap="round">
+      <path d="M150 74 C 200 74, 200 14, 250 14" stroke="#e879f9"/>
+      <path d="M150 74 C 200 74, 200 44, 250 44" stroke="#a855f7"/>
+      <path d="M150 74 C 205 74, 205 74, 250 74" stroke="#f5b740"/>
+      <path d="M150 74 C 200 74, 200 104, 250 104" stroke="#22d3ee"/>
+      <path d="M150 74 C 200 74, 200 134, 250 134" stroke="#34d399"/>
+    </g>
+    <!-- source tile -->
+    <rect x="6" y="36" width="76" height="76" rx="14" fill="url(#brand)"/>
+    <rect x="6" y="36" width="76" height="76" rx="14" fill="none" stroke="#ffffff" stroke-opacity="0.25"/>
+    <circle cx="30" cy="60" r="8" fill="#ffffff" fill-opacity="0.9"/>
+    <path d="M14 104 L40 80 L56 96 L74 78 V112 H14 Z" fill="#0b0b12" fill-opacity="0.5"/>
+    <!-- prism -->
+    <path d="M104 48 L136 74 L104 100 Z" fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.4" stroke-linejoin="round"/>
+    <!-- ray endpoints -->
+    <g>
+      <circle cx="250" cy="14" r="4" fill="#e879f9"/>
+      <circle cx="250" cy="44" r="4" fill="#a855f7"/>
+      <circle cx="250" cy="74" r="4" fill="#f5b740"/>
+      <circle cx="250" cy="104" r="4" fill="#22d3ee"/>
+      <circle cx="250" cy="134" r="4" fill="#34d399"/>
+    </g>
+  </g>
+</svg>
