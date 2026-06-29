@@ -53,7 +53,7 @@ You can also **compress to a target size** ("get this under 5 MB" and it finds t
 Everything runs client side:
 
 - **Images** decode through the browser (with [`heic2any`](https://github.com/alexcorvi/heic2any)/libheif for HEIC), draw to an `OffscreenCanvas` for resizing, and encode via the native canvas or the [jSquash](https://github.com/jamsinclair/jSquash) (libavif) WebAssembly codec for AVIF.
-- **Audio and video** run through a self-hosted, single-threaded [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm). The ~31 MB core is bundled with the app (no CDN) and **lazy loaded**, so image-only users never download it. Single-threaded means no `SharedArrayBuffer` and no cross-origin-isolation headers, so it runs anywhere, including GitHub Pages, with no service-worker tricks.
+- **Audio and video** run through a self-hosted [ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm). The core is bundled with the app (no CDN) and **lazy loaded**, so image-only users never download it. It uses the **multi-threaded** core when the page is cross-origin isolated (a service worker supplies the `COOP`/`COEP` headers, since GitHub Pages can't), and falls back to the **single-threaded** core everywhere else.
 
 The trade-off is honest: encoding happens on your hardware, so long videos are slower than a server would be. That slowness is the price of never uploading, and it is the whole point.
 
