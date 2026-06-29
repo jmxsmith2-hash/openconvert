@@ -7,6 +7,8 @@ export interface ConvertOptions {
   quality: number
   /** Cap the longest side to this many pixels. `null` keeps original size. */
   maxDimension: number | null
+  /** When set, ignore `quality` and search for the largest file <= this many bytes. */
+  targetBytes?: number | null
 }
 
 export interface ConvertResult {

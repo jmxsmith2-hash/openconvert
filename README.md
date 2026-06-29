@@ -36,6 +36,8 @@ OpenConvert does the conversion **on your device**, in a normal browser tab. Fil
 
 Batch convert, tune quality, resize, then download files individually or as a ZIP. Metadata (including GPS/EXIF) is stripped automatically on re-encode.
 
+You can also **compress to a target size** ("get this under 5 MB" and it finds the quality/bitrate for you), it runs **faster video** on a multi-threaded core where the browser allows it, and it **installs as an app** and works offline after the first visit.
+
 ## How it compares
 
 |  | Typical online converters | Desktop apps | **OpenConvert** |
@@ -77,9 +79,11 @@ React 19 · TypeScript · Vite · Tailwind CSS v4 · jSquash · heic2any · ffmp
 
 ## Roadmap
 
-- [ ] Multi-threaded ffmpeg core (via `coi-serviceworker`) for much faster video
+- [x] Compress to a target size (images, audio, video)
+- [x] Multi-threaded ffmpeg core for much faster video (service-worker cross-origin isolation)
+- [x] Installable PWA with offline support
 - [ ] Web Worker offload so large image batches never stutter
-- [ ] Installable PWA for true offline use
+- [ ] Two-pass video for more precise target sizes
 - [ ] More output formats and presets
 
 ## Contributing

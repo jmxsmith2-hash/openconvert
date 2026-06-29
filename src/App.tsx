@@ -151,7 +151,14 @@ function App() {
                   {hasMedia && (
                     <div className={bothKinds ? 'border-t border-line pt-6' : undefined}>
                       {bothKinds && <GroupLabel>Audio &amp; video</GroupLabel>}
-                      <MediaControls format={av.format} formats={av.formats} setFormat={av.setFormat} disabled={av.isConverting} />
+                      <MediaControls
+                        format={av.format}
+                        formats={av.formats}
+                        setFormat={av.setFormat}
+                        targetBytes={av.targetBytes}
+                        setTargetBytes={av.setTargetBytes}
+                        disabled={av.isConverting}
+                      />
                     </div>
                   )}
 

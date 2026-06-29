@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AV_FORMATS, availableFormats, mediaKind, type AvFormat } from '../lib/media'
+import { AV_FORMATS, availableFormats, mediaDuration, mediaKind, type AvFormat } from '../lib/media'
 
 export type MediaStatus = 'queued' | 'working' | 'done' | 'error'
 
@@ -24,6 +24,7 @@ function renameExt(name: string, ext: string): string {
 export function useMediaConverter() {
   const [jobs, setJobs] = useState<MediaJob[]>([])
   const [format, setFormatState] = useState<AvFormat>('mp3')
+  const [targetBytes, setTargetBytesState] = useState<number | null>(null)
   const [isConverting, setIsConverting] = useState(false)
   const [coreLoading, setCoreLoading] = useState(false)
 
@@ -31,6 +32,8 @@ export function useMediaConverter() {
   jobsRef.current = jobs
   const formatRef = useRef(format)
   formatRef.current = format
+  const targetRef = useRef(targetBytes)
+  targetRef.current = targetBytes
 
   const hasVideo = jobs.some((j) => j.kind === 'video')
   const formats = availableFormats(hasVideo)
@@ -112,6 +115,20 @@ export function useMediaConverter() {
     setJobs([])
   }, [])
 
+  // Changing the target re-queues converted jobs (their old output is now stale).
+  const setTargetBytes = useCallback((bytes: number | null) => {
+    targetRef.current = bytes
+    setTargetBytesState(bytes)
+    setJobs((prev) =>
+      prev.map((j) => {
+        if (j.result) URL.revokeObjectURL(j.result.url)
+        return j.status === 'done' || j.status === 'working'
+          ? { ...j, status: 'queued', progress: 0, result: undefined, error: undefined }
+          : j
+      }),
+    )
+  }, [])
+
   const convertAll = useCallback(async () => {
     if (isConverting) return
     setIsConverting(true)
@@ -125,8 +142,16 @@ export function useMediaConverter() {
       for (const job of pending) {
         patch(job.id, { status: 'working', progress: 0, error: undefined })
         try {
-          const { blob } = await ffmpeg.convertMedia(job.file, formatRef.current, (p) =>
-            patch(job.id, { progress: p }),
+          let target: { bytes: number; durationSec: number } | undefined
+          if (targetRef.current && targetRef.current > 0) {
+            const durationSec = await mediaDuration(job.file, job.kind)
+            if (durationSec > 0) target = { bytes: targetRef.current, durationSec }
+          }
+          const { blob } = await ffmpeg.convertMedia(
+            job.file,
+            formatRef.current,
+            (p) => patch(job.id, { progress: p }),
+            target,
           )
           patch(job.id, { status: 'done', progress: 1, result: { blob, url: URL.createObjectURL(blob) } })
         } catch (e) {
@@ -160,6 +185,8 @@ export function useMediaConverter() {
     format,
     setFormat,
     formats,
+    targetBytes,
+    setTargetBytes,
     addFiles,
     removeJob,
     clear,

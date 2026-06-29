@@ -61,3 +61,38 @@ export function extOf(name: string): string {
   const dot = name.lastIndexOf('.')
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : 'bin'
 }
+
+/** Read a clip's duration (seconds) via a media element. 0 if unknown. */
+export function mediaDuration(file: File, kind: 'audio' | 'video'): Promise<number> {
+  return new Promise((resolve) => {
+    const el = document.createElement(kind === 'audio' ? 'audio' : 'video')
+    el.preload = 'metadata'
+    const url = URL.createObjectURL(file)
+    const done = (d: number) => {
+      URL.revokeObjectURL(url)
+      resolve(Number.isFinite(d) && d > 0 ? d : 0)
+    }
+    el.onloadedmetadata = () => done(el.duration)
+    el.onerror = () => done(0)
+    el.src = url
+  })
+}
+
+/** ffmpeg args for hitting a bitrate target. Returns null for formats that
+ *  can't be bitrate-targeted (GIF, lossless WAV) so callers use the defaults. */
+export function targetArgs(format: AvFormat, videoK: number, audioK: number): string[] | null {
+  switch (format) {
+    case 'mp4':
+      return ['-c:v', 'libx264', '-preset', 'veryfast', '-b:v', `${videoK}k`, '-maxrate', `${Math.round(videoK * 1.2)}k`, '-bufsize', `${videoK * 2}k`, '-c:a', 'aac', '-b:a', `${audioK}k`, '-movflags', '+faststart']
+    case 'webm':
+      return ['-c:v', 'libvpx-vp9', '-b:v', `${videoK}k`, '-deadline', 'realtime', '-cpu-used', '6', '-c:a', 'libopus', '-b:a', `${audioK}k`]
+    case 'mp3':
+      return ['-vn', '-c:a', 'libmp3lame', '-b:a', `${audioK}k`]
+    case 'm4a':
+      return ['-vn', '-c:a', 'aac', '-b:a', `${audioK}k`]
+    case 'ogg':
+      return ['-vn', '-c:a', 'libopus', '-b:a', `${audioK}k`]
+    default:
+      return null
+  }
+}

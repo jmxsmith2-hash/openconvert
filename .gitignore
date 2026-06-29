@@ -25,3 +25,4 @@ dist-ssr
 
 # self-hosted ffmpeg.wasm core (copied from node_modules at build time)
 public/ffmpeg/
+public/ffmpeg-mt/
